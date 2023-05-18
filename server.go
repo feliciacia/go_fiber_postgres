@@ -35,6 +35,11 @@ func main() {
 		port = "3000"
 	}
 	log.Fatalln(app.Listen(fmt.Sprintf(":%v", port)))
+
+	engine := html.New("./views", ".html")
+	app := fiber.New(fiber.Config{
+		Views: engine,
+	})
 }
 
 func indexHandler(c *fiber.Ctx) error {
