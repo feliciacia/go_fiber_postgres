@@ -6,12 +6,14 @@ import (
 	"log"
 	"os"
 
+	_ "github.com/lib/pq"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/template/html"
 )
 
 func main() {
-	connStr := "postgresql://<.>:<.>@<.>/todos?sslmode=disable"
+	connStr := "postgresql://.:.@./todos?sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
@@ -26,7 +28,7 @@ func main() {
 		return indexHandler(c, db)
 	})
 	app.Post("/", func(c *fiber.Ctx) error {
-		return postHandler(c)
+		return postHandler(c, db)
 	})
 	app.Put("/update", func(c *fiber.Ctx) error {
 		return putHandler(c)
@@ -39,6 +41,7 @@ func main() {
 	if port == "" {
 		port = "3000"
 	}
+	app.Static("/", "./public")
 	log.Fatalln(app.Listen(fmt.Sprintf(":%v", port)))
 }
 
@@ -61,8 +64,24 @@ func indexHandler(c *fiber.Ctx, db *sql.DB) error {
 	})
 }
 
-func postHandler(c *fiber.Ctx) error {
-	return c.SendString("post")
+type todo struct {
+	Item string
+}
+
+func postHandler(c *fiber.Ctx, db *sql.DB) error {
+	newTodo := todo{}
+	if err := c.BodyParser(&newTodo); err != nil {
+		log.Printf("An error occcures: %v", err)
+		return c.SendString(err.Error())
+	}
+	fmt.Printf("%v", newTodo)
+	if newTodo.Item != "" {
+		_, err := db.Exec("INSERT into todos VALUES ($1)", newTodo.Item)
+		if err != nil {
+			log.Fatalf("An error occured while executing query: %v", err)
+		}
+	}
+	return c.Redirect("/")
 }
 
 func putHandler(c *fiber.Ctx) error {
