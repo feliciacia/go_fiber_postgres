@@ -34,7 +34,7 @@ func main() {
 		return putHandler(c, db)
 	})
 	app.Delete("/delete", func(c *fiber.Ctx) error {
-		return deleteHandler(c)
+		return deleteHandler(c, db)
 	})
 
 	port := os.Getenv("PORT")
@@ -91,6 +91,8 @@ func putHandler(c *fiber.Ctx, db *sql.DB) error {
 	return c.Redirect("/")
 }
 
-func deleteHandler(c *fiber.Ctx) error {
+func deleteHandler(c *fiber.Ctx, db *sql.DB) error {
+	todoToDelete := c.Query("item")
+	db.Exec("DELETE from todos WHERE item=$1", todoToDelete)
 	return c.SendString("delete")
 }
