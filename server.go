@@ -31,7 +31,7 @@ func main() {
 		return postHandler(c, db)
 	})
 	app.Put("/update", func(c *fiber.Ctx) error {
-		return putHandler(c)
+		return putHandler(c, db)
 	})
 	app.Delete("/delete", func(c *fiber.Ctx) error {
 		return deleteHandler(c)
@@ -84,8 +84,11 @@ func postHandler(c *fiber.Ctx, db *sql.DB) error {
 	return c.Redirect("/")
 }
 
-func putHandler(c *fiber.Ctx) error {
-	return c.SendString("put")
+func putHandler(c *fiber.Ctx, db *sql.DB) error {
+	olditem := c.Query("olditem")
+	newitem := c.Query("newitem")
+	db.Exec("UPDATE todos SET item=$1 WHERE item=$2", newitem, olditem)
+	return c.Redirect("/")
 }
 
 func deleteHandler(c *fiber.Ctx) error {
